@@ -104,6 +104,16 @@ export function vistaAjustes(cont) {
         ${numeroAj('restos.m3', 'Precio por m³', '€/m³')}
       `)}
 
+      ${grupo('📄 Presupuestos', `
+        ${numeroAj('presupuestos.validezDias', 'Validez por defecto', 'días')}
+        <label class="campo"><span class="campo-etiqueta">Forma de pago por defecto</span>
+          <textarea data-ajuste="presupuestos.formaPago" rows="2">${esc(a.presupuestos.formaPago)}</textarea></label>
+        <label class="campo"><span class="campo-etiqueta">Serie (opcional)</span>
+          <input type="text" data-ajuste="presupuestos.serie" value="${esc(a.presupuestos.serie)}" maxlength="5" autocapitalize="characters" placeholder="Ej.: A"></label>
+        <p class="nota">Si varias personas hacéis presupuestos en móviles distintos, poned una letra diferente en cada uno
+        (A, B, C…) para que no se repitan los números. Quedarán así: A-${new Date().getFullYear()}-001.</p>
+      `)}
+
       ${grupo('💾 Copia de seguridad', `
         <p class="nota">Guarda todos los datos en un archivo. Sirve para no perder nada o para pasarlo a otro móvil o tablet.</p>
         <button class="btn btn-primario btn-ancho" data-accion="exportar">⬇️ Guardar copia</button>
@@ -115,7 +125,7 @@ export function vistaAjustes(cont) {
         <button class="btn btn-peligro btn-ancho" data-accion="restablecer">Restablecer precios</button>
       `)}
 
-      <p class="nota version">Desbroce Los Zagales · versión 1</p>`;
+      <p class="nota version">Desbroce Los Zagales · versión 2</p>`;
   }
 
   function alCambiar(ev) {

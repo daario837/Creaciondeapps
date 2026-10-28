@@ -1,6 +1,6 @@
 // Service worker: guarda la app en el móvil para que funcione sin cobertura.
 // IMPORTANTE: cambiar VERSION cada vez que se publique una actualización.
-const VERSION = 'dlz-v1';
+const VERSION = 'dlz-v2';
 
 const ARCHIVOS = [
   './',
@@ -14,6 +14,10 @@ const ARCHIVOS = [
   './js/pin.js',
   './js/calculadora.js',
   './js/ajustes.js',
+  './js/datos.js',
+  './js/desglose.js',
+  './js/clientes.js',
+  './js/presupuestos.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',

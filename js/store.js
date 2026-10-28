@@ -69,6 +69,11 @@ export function ajustesPorDefecto() {
     poda: { pequeno: 15, mediano: 35, grande: 70, plataforma: 25 },
     fumigacion: { m2: 0.08, arbol: 3 },
     restos: { fijo: 40, m3: 25 },
+    presupuestos: {
+      serie: '', // letra o prefijo opcional para distinguir dispositivos (p. ej. "A")
+      validezDias: 30,
+      formaPago: 'Transferencia bancaria o efectivo al terminar el trabajo',
+    },
   };
 }
 

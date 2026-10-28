@@ -2,24 +2,32 @@
 import { estaDesbloqueado, pedirPin, vigilarInactividad } from './pin.js';
 import { vistaCalculadora } from './calculadora.js';
 import { vistaAjustes } from './ajustes.js';
+import { vistaClientes, vistaCliente, vistaEditarCliente } from './clientes.js';
+import { vistaPresupuestos, vistaPresupuesto } from './presupuestos.js';
 import { $, $$ } from './ui.js';
 
+// Cada dirección (#nombre/parámetro) muestra una pantalla. "menu" indica qué botón de abajo se ilumina.
 const VISTAS = {
-  calcular: vistaCalculadora,
-  ajustes: vistaAjustes,
+  calcular: [vistaCalculadora, 'calcular'],
+  presupuestos: [vistaPresupuestos, 'presupuestos'],
+  presupuesto: [vistaPresupuesto, 'presupuestos'],
+  clientes: [vistaClientes, 'clientes'],
+  cliente: [vistaCliente, 'clientes'],
+  'cliente-editar': [vistaEditarCliente, 'clientes'],
+  ajustes: [vistaAjustes, 'ajustes'],
 };
 
 function mostrar() {
-  const nombre = location.hash.slice(1) || 'calcular';
-  const vista = VISTAS[nombre] || VISTAS.calcular;
+  const [nombre, param] = decodeURIComponent(location.hash.slice(1)).split('/');
+  const [vista, menu] = VISTAS[nombre] || VISTAS.calcular;
   const principal = $('#principal');
   // Un contenedor nuevo en cada cambio de pantalla, así no se mezclan los eventos
   const cont = document.createElement('div');
   cont.className = 'vista';
   principal.replaceChildren(cont);
-  vista(cont);
+  vista(cont, param);
   window.scrollTo(0, 0);
-  $$('.menu a').forEach((a) => a.classList.toggle('activo', a.getAttribute('href') === '#' + nombre));
+  $$('.menu a').forEach((a) => a.classList.toggle('activo', a.getAttribute('href') === '#' + menu));
 }
 
 function iniciar() {

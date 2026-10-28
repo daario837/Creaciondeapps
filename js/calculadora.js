@@ -1,16 +1,87 @@
 // Pantalla "Calcular": zonas de desbroce, poda, fumigación, restos y total.
 import { ajustes, leer, escribir, MAQUINAS, MALEZAS, FACTORES, TAMANOS_ARBOL } from './store.js';
-import { calcular, trabajoVacio, zonaVacia } from './calc.js';
-import { esc, euros, numero, horas, $, confirmar, escribirRuta, leerRuta, aviso } from './ui.js';
+import { calcular, trabajoVacio, zonaVacia, num } from './calc.js';
+import { esc, euros, numero, horas, $, confirmar, escribirRuta, leerRuta, aviso, paraEditar } from './ui.js';
+import { htmlDesglose } from './desglose.js';
+import { cliente, presupuesto, guardarPresupuesto, copiaPrecios, nuevoId } from './datos.js';
+import { elegirCliente } from './clientes.js';
 
-const nuevoId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
 const x = (n) => '×' + numero(n, 2);
 
-export function vistaCalculadora(cont) {
-  const a = ajustes();
-  let t = leer('borrador') || trabajoVacio(a);
+const FORMAS_PAGO = [
+  'Transferencia bancaria al terminar el trabajo',
+  'Efectivo al terminar el trabajo',
+  'Bizum al terminar el trabajo',
+  '50 % al aceptar y 50 % al terminar',
+];
 
-  const guardar = () => escribir('borrador', t);
+// El "borrador" es el presupuesto que se está preparando ahora mismo en la calculadora.
+// Se guarda solo, así no se pierde si se cierra la app.
+function borradorNuevo(clienteId = null) {
+  const a = ajustes();
+  return {
+    trabajo: trabajoVacio(a),
+    clienteId,
+    validezDias: a.presupuestos.validezDias,
+    formaPago: a.presupuestos.formaPago,
+    notas: '',
+    editando: null, // id del presupuesto si se está modificando uno ya guardado
+    precios: null, // precios propios del presupuesto que se edita
+  };
+}
+
+function cargarBorrador() {
+  const b = leer('borrador');
+  if (!b) return borradorNuevo();
+  if (b.zonas) return { ...borradorNuevo(), trabajo: b }; // formato de la versión 1
+  return b;
+}
+
+function tieneDatos(b) {
+  const t = b.trabajo;
+  return !!(b.editando || t.zonas.some((z) => num(z.superficie) > 0) || t.poda.length || t.fumigacion.length);
+}
+
+// Desde la ficha de un cliente: prepara un presupuesto para él
+export async function empezarPresupuestoPara(clienteId) {
+  const b = cargarBorrador();
+  if (b.editando) {
+    const p = presupuesto(b.editando);
+    if (!(await confirmar(`Estás modificando el presupuesto ${p?.numero ?? ''} sin guardar. ¿Descartar esos cambios?`, { si: 'Descartar', peligro: true }))) return false;
+    escribir('borrador', borradorNuevo(clienteId));
+  } else {
+    b.clienteId = clienteId;
+    escribir('borrador', b);
+  }
+  return true;
+}
+
+// Abre un presupuesto guardado en la calculadora para modificarlo o copiarlo
+export async function abrirEnCalculadora(p, copia = false) {
+  const b = cargarBorrador();
+  if (tieneDatos(b) && b.editando !== p.id) {
+    if (!(await confirmar('En la calculadora hay un cálculo sin guardar. ¿Sustituirlo?', { si: 'Sustituir', peligro: true }))) return false;
+  }
+  const trabajo = JSON.parse(JSON.stringify(p.trabajo));
+  if (copia) [...trabajo.zonas, ...trabajo.poda, ...trabajo.fumigacion].forEach((z) => (z.id = nuevoId()));
+  escribir('borrador', {
+    trabajo,
+    clienteId: p.clienteId,
+    validezDias: p.validezDias,
+    formaPago: p.formaPago,
+    notas: p.notas || '',
+    editando: copia ? null : p.id,
+    precios: copia ? null : p.precios,
+  });
+  return true;
+}
+
+export function vistaCalculadora(cont) {
+  let b = cargarBorrador();
+  let t = b.trabajo;
+  let a = b.precios || ajustes();
+
+  const guardar = () => { b.trabajo = t; escribir('borrador', b); };
 
   function opcion(nombre, campo, valor, actual, texto, extra = '', rerender = false) {
     return `<label class="opcion">
@@ -110,9 +181,44 @@ export function vistaCalculadora(cont) {
     </section>`;
   }
 
+  function htmlCliente() {
+    const c = b.clienteId ? cliente(b.clienteId) : null;
+    return `<section class="tarjeta tarjeta-cliente" id="tarjeta-cliente">
+      ${c
+        ? `<div class="cliente-elegido"><span class="cliente-icono">👤</span>
+            <span class="fila-lista-texto"><b>${esc(c.nombre)}</b><small>${esc(c.telefono || '')} ${esc(c.direccion || '')}</small></span>
+            <button class="btn btn-secundario btn-pequeno" data-accion="elegir-cliente">Cambiar</button></div>`
+        : `<button class="btn btn-secundario btn-ancho" data-accion="elegir-cliente">👤 Elegir cliente</button>
+           <p class="nota">Puedes calcular sin cliente, pero hace falta para guardar el presupuesto.</p>`}
+    </section>`;
+  }
+
+  function htmlCondiciones() {
+    return `<section class="tarjeta">
+      <h3>📋 Condiciones</h3>
+      ${campoDoc('validezDias', 'Validez del presupuesto', 'días', 'numeric')}
+      <label class="campo"><span class="campo-etiqueta">Forma de pago</span>
+        <textarea data-doc="formaPago" rows="2">${esc(b.formaPago)}</textarea></label>
+      <div class="chips">
+        ${FORMAS_PAGO.map((f) => `<button class="chip" data-accion="forma-pago" data-texto="${esc(f)}">${esc(f)}</button>`).join('')}
+      </div>
+      <label class="campo"><span class="campo-etiqueta">Observaciones (salen en el presupuesto)</span>
+        <textarea data-doc="notas" rows="3" placeholder="Ej.: el cliente retira la leña">${esc(b.notas)}</textarea></label>
+    </section>`;
+  }
+
+  function campoDoc(campo, etiqueta, unidad, modo = 'decimal') {
+    return `<label class="campo"><span class="campo-etiqueta">${etiqueta}</span>
+      <span class="con-unidad"><input type="text" inputmode="${modo}" autocomplete="off" data-doc="${campo}" value="${esc(paraEditar(b[campo]))}"><span class="unidad">${unidad}</span></span></label>`;
+  }
+
   function render() {
+    const editado = b.editando ? presupuesto(b.editando) : null;
     cont.innerHTML = `
-      <h2 class="titulo-vista">Calcular presupuesto</h2>
+      <h2 class="titulo-vista">${editado ? 'Modificar presupuesto ' + esc(editado.numero) : 'Calcular presupuesto'}</h2>
+      ${editado ? `<div class="aviso-fijo">✏️ Estás modificando un presupuesto guardado. Usa los precios que tenía cuando se hizo.
+        <button class="btn btn-secundario btn-pequeno" data-accion="precios-actuales">Poner precios actuales</button></div>` : ''}
+      ${htmlCliente()}
       <h3 class="titulo-bloque">🌿 Desbroce</h3>
       ${t.zonas.map(htmlZona).join('')}
       <button class="btn btn-anadir" data-accion="anadir-zona">＋ Añadir otra zona</button>
@@ -132,7 +238,12 @@ export function vistaCalculadora(cont) {
         <div id="tabla-desglose"></div>
       </section>
 
-      <button class="btn btn-secundario btn-ancho" data-accion="reiniciar">🔄 Empezar de nuevo</button>
+      ${htmlCondiciones()}
+
+      <button class="btn btn-primario btn-ancho btn-grande" data-accion="guardar">💾 ${editado ? 'Guardar cambios' : 'Guardar presupuesto'}</button>
+      ${editado
+        ? `<button class="btn btn-secundario btn-ancho" data-accion="cancelar-edicion">Cancelar cambios</button>`
+        : `<button class="btn btn-secundario btn-ancho" data-accion="reiniciar">🔄 Empezar de nuevo</button>`}
       <div class="espacio-total"></div>
 
       <button class="barra-total" data-accion="ver-desglose">
@@ -167,29 +278,7 @@ export function vistaCalculadora(cont) {
       if (el) el.innerHTML = `<span>${numero(f.cantidad)} × ${euros(f.precio)}${f.producto ? ' + producto' : ''}</span><b>${euros(f.importe)}</b>`;
     });
 
-    const filas = [];
-    const fila = (txt, imp, cls = '') => filas.push(`<tr class="${cls}"><td>${txt}</td><td>${imp}</td></tr>`);
-    t.zonas.forEach((z, i) => {
-      const rz = r.zonas[i];
-      if (rz.horas > 0) {
-        const maq = MAQUINAS.find((m) => m.id === z.maquina).nombre;
-        const mal = MALEZAS.find((m) => m.id === z.maleza).nombre;
-        fila(`${esc(z.nombre)}<small>${numero(rz.superficie)} m² · ${mal} · ${maq}<br>${numero(rz.rendimiento, 0)} m²/h${rz.factor !== 1 ? ' · factores ' + x(rz.factor) : ''} → ${horas(rz.horas)}</small>`, euros(rz.importe));
-      }
-    });
-    if (r.podaTotal) fila(`Poda<small>${r.poda.reduce((s, p) => s + p.arboles, 0)} árboles</small>`, euros(r.podaTotal));
-    if (r.fumigacionTotal) fila('Fumigación<small>incluye producto</small>', euros(r.fumigacionTotal));
-    if (r.restos) fila('Retirada de restos', euros(r.restos));
-    if (r.desplazamiento) fila(`Desplazamiento${r.kmCobrados ? `<small>${numero(r.kmCobrados)} km</small>` : ''}`, euros(r.desplazamiento));
-    if (r.ajusteMinimo) fila(`Ajuste a tarifa mínima<small>el trabajo mínimo es ${euros(r.minima)}</small>`, euros(r.ajusteMinimo), 'destacada');
-    fila('<b>Base imponible</b>', `<b>${euros(r.base)}</b>`, 'separada');
-    fila(`IVA (${numero(r.ivaPct)} %)`, euros(r.iva));
-    if (r.irpfPct) fila(`Retención IRPF (−${numero(r.irpfPct)} %)`, '−' + euros(r.irpf));
-    fila('<b>TOTAL</b>', `<b>${euros(r.total)}</b>`, 'total');
-
-    $('#tabla-desglose', cont).innerHTML = r.base > 0
-      ? `${r.horas > 0 ? `<p class="horas-grande">Horas de máquina estimadas: <b>${horas(r.horas)}</b></p>` : ''}<table>${filas.join('')}</table>`
-      : '<p class="nota">Rellena al menos una superficie o trabajo para ver el precio.</p>';
+    $('#tabla-desglose', cont).innerHTML = htmlDesglose(t, r);
     $('#total-horas', cont).textContent = r.horas > 0 ? '⏱ ' + horas(r.horas) : '';
     $('#total-importe', cont).textContent = euros(r.total);
   }
@@ -197,6 +286,10 @@ export function vistaCalculadora(cont) {
   // --- Eventos ---
   function alCambiar(e) {
     const el = e.target;
+    if (el.dataset.doc) {
+      b[el.dataset.doc] = el.value;
+      return guardar();
+    }
     const campo = el.dataset.campo;
     if (!campo) return;
     let valor = el.type === 'checkbox' ? el.checked : el.value;
@@ -210,9 +303,9 @@ export function vistaCalculadora(cont) {
   cont.addEventListener('change', alCambiar);
 
   cont.addEventListener('click', async (e) => {
-    const b = e.target.closest('[data-accion]');
-    if (!b) return;
-    const acc = b.dataset.accion;
+    const boton = e.target.closest('[data-accion]');
+    if (!boton) return;
+    const acc = boton.dataset.accion;
     let nuevo = null;
     if (acc === 'anadir-zona') {
       const ult = t.zonas[t.zonas.length - 1];
@@ -227,21 +320,71 @@ export function vistaCalculadora(cont) {
       nuevo = nuevoId();
       t.fumigacion.push({ id: nuevo, modo: 'm2', cantidad: '', producto: '' });
     } else if (acc === 'quitar') {
-      const lista = leerRuta(t, b.dataset.lista);
+      const lista = leerRuta(t, boton.dataset.lista);
       if (!(await confirmar('¿Quitar este trabajo del cálculo?', { si: 'Quitar', peligro: true }))) return;
-      lista.splice(+b.dataset.i, 1);
+      lista.splice(+boton.dataset.i, 1);
     } else if (acc === 'reiniciar') {
       if (!(await confirmar('¿Borrar todo y empezar un cálculo nuevo?', { si: 'Empezar de nuevo', peligro: true }))) return;
-      t = trabajoVacio(a);
+      nuevoBorrador();
       aviso('Cálculo nuevo');
+    } else if (acc === 'cancelar-edicion') {
+      if (!(await confirmar('¿Descartar los cambios? El presupuesto guardado queda como estaba.', { si: 'Descartar', peligro: true }))) return;
+      const id = b.editando;
+      nuevoBorrador();
+      location.hash = '#presupuesto/' + id;
+      return;
+    } else if (acc === 'elegir-cliente') {
+      const id = await elegirCliente();
+      if (!id) return;
+      b.clienteId = id;
+    } else if (acc === 'forma-pago') {
+      b.formaPago = boton.dataset.texto;
+    } else if (acc === 'precios-actuales') {
+      if (!(await confirmar('¿Recalcular este presupuesto con los precios actuales de Ajustes?', { si: 'Sí, recalcular' }))) return;
+      b.precios = null;
+      a = ajustes();
+      aviso('Precios actualizados');
+    } else if (acc === 'guardar') {
+      return guardarComoPresupuesto();
     } else if (acc === 'ver-desglose') {
       $('#desglose', cont).scrollIntoView({ behavior: 'smooth' });
       return;
     } else return;
     guardar();
+    const y = window.scrollY;
     render();
+    if (!nuevo) window.scrollTo(0, y);
     if (nuevo) document.getElementById('res-' + nuevo)?.closest('.tarjeta').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
+
+  function nuevoBorrador() {
+    b = borradorNuevo();
+    t = b.trabajo;
+    a = ajustes();
+  }
+
+  function guardarComoPresupuesto() {
+    const r = calcular(t, a);
+    if (!b.clienteId || !cliente(b.clienteId)) {
+      aviso('Elige primero el cliente', 'error');
+      $('#tarjeta-cliente', cont).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (!(r.base > 0)) return aviso('El presupuesto está vacío', 'error');
+    const existente = b.editando ? presupuesto(b.editando) : null;
+    const p = guardarPresupuesto({
+      ...(existente || {}),
+      clienteId: b.clienteId,
+      trabajo: t,
+      precios: b.precios || copiaPrecios(),
+      validezDias: Math.round(num(b.validezDias)) || 30,
+      formaPago: b.formaPago.trim(),
+      notas: b.notas.trim(),
+    });
+    escribir('borrador', borradorNuevo());
+    aviso(existente ? 'Cambios guardados ✓' : `Presupuesto ${p.numero} guardado ✓`);
+    location.hash = '#presupuesto/' + p.id;
+  }
 
   render();
 }
