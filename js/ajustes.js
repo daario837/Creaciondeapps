@@ -4,7 +4,10 @@ import {
   MAQUINAS, MALEZAS, FACTORES, TAMANOS_ARBOL,
 } from './store.js';
 import { num } from './calc.js';
-import { esc, aviso, confirmar, leerRuta, escribirRuta, paraEditar, $ } from './ui.js';
+import { esc, aviso, confirmar, leerRuta, escribirRuta, paraEditar, numero, $ } from './ui.js';
+
+// "588 m²/h" también se puede leer como "1,70 h por cada 1.000 m²"
+const equivalencia = (m2h) => (num(m2h) > 0 ? `= ${(1000 / num(m2h)).toFixed(2).replace(".", ",")} h por cada 1.000 m²` : 'Esta máquina no se usa con esta maleza');
 
 export function vistaAjustes(cont) {
   const a = ajustes();
@@ -57,15 +60,20 @@ export function vistaAjustes(cont) {
 
       ${grupo('📐 Rendimientos (m² por hora)', `
         <p class="nota">Cuántos m² desbrozáis en una hora con cada máquina y cada maleza, en condiciones normales
-        (densidad media, altura media, terreno llano). Pon 0 si esa máquina no sirve para esa maleza.</p>
+        (densidad media, altura media, terreno llano). Pon 0 si esa máquina no sirve para esa maleza.
+        Debajo verás lo mismo en horas por cada 1.000 m².</p>
+        <p class="nota">Para sacar los vuestros: apuntad en varios trabajos los m² y las horas reales, y dividid m² ÷ horas.</p>
         ${MAQUINAS.map((m) => `<h4 class="subtitulo">${m.icono} ${m.nombre}</h4>
-          ${MALEZAS.map((mal) => numeroAj(`rendimientos.${m.id}.${mal.id}`, mal.nombre, 'm²/h')).join('')}`).join('')}
+          ${MALEZAS.map((mal) => {
+            const ruta = `rendimientos.${m.id}.${mal.id}`;
+            return numeroAj(ruta, mal.nombre, 'm²/h') + `<span class="equivalencia" data-equiv="${ruta}">${equivalencia(leerRuta(a, ruta))}</span>`;
+          }).join('')}`).join('')}
       `)}
 
       ${grupo('⚖️ Factores de dificultad', `
         <p class="nota">Multiplican las horas. 1 = normal. Por ejemplo, 1,3 = un 30 % más de tiempo; 0,8 = un 20 % menos.</p>
         ${FACTORES.map((f) => `<h4 class="subtitulo">${f.nombre}</h4>
-          ${f.niveles.map(([id, txt]) => numeroAj(`factores.${f.id}.${id}`, txt, '×')).join('')}`).join('')}
+          ${f.niveles.map(([id, txt, pista]) => numeroAj(`factores.${f.id}.${id}`, `${txt} <small>(${pista.toLowerCase()})</small>`, '×')).join('')}`).join('')}
       `)}
 
       ${grupo('🚗 Desplazamiento', `
@@ -82,6 +90,8 @@ export function vistaAjustes(cont) {
       ${grupo('💶 Tarifa mínima e impuestos', `
         ${numeroAj('tarifaMinima', 'Tarifa mínima (sin IVA)', '€')}
         <p class="nota">Si un presupuesto sale por menos, se cobra esta cantidad.</p>
+        <label class="interruptor"><input type="checkbox" data-ajuste="aplicarImpuestos" ${a.aplicarImpuestos ? 'checked' : ''}>
+          <span>Incluir IVA e IRPF en los presupuestos <small>Apagado: los precios salen sin impuestos («IVA no incluido»)</small></span></label>
         ${numeroAj('iva', 'IVA', '%')}
         ${numeroAj('irpf', 'Retención IRPF', '%')}
         <label class="interruptor"><input type="checkbox" data-ajuste="irpfPorDefecto" ${a.irpfPorDefecto ? 'checked' : ''}>
@@ -108,6 +118,10 @@ export function vistaAjustes(cont) {
         ${numeroAj('presupuestos.validezDias', 'Validez por defecto', 'días')}
         <label class="campo"><span class="campo-etiqueta">Forma de pago por defecto</span>
           <textarea data-ajuste="presupuestos.formaPago" rows="2">${esc(a.presupuestos.formaPago)}</textarea></label>
+        <label class="campo"><span class="campo-etiqueta">Plazo por defecto</span>
+          <input type="text" data-ajuste="presupuestos.plazo" value="${esc(a.presupuestos.plazo)}"></label>
+        <label class="campo"><span class="campo-etiqueta">Condiciones por defecto</span>
+          <textarea data-ajuste="presupuestos.condiciones" rows="5">${esc(a.presupuestos.condiciones)}</textarea></label>
         <label class="campo"><span class="campo-etiqueta">Serie (opcional)</span>
           <input type="text" data-ajuste="presupuestos.serie" value="${esc(a.presupuestos.serie)}" maxlength="5" autocapitalize="characters" placeholder="Ej.: A"></label>
         <p class="nota">Si varias personas hacéis presupuestos en móviles distintos, poned una letra diferente en cada uno
@@ -125,7 +139,7 @@ export function vistaAjustes(cont) {
         <button class="btn btn-peligro btn-ancho" data-accion="restablecer">Restablecer precios</button>
       `)}
 
-      <p class="nota version">Desbroce Los Zagales · versión 2</p>`;
+      <p class="nota version">Desbroce Los Zagales · versión 3</p>`;
   }
 
   function alCambiar(ev) {
@@ -141,6 +155,8 @@ export function vistaAjustes(cont) {
     } else valor = el.value.trim();
     escribirRuta(a, ruta, valor);
     guardarAjustes(a);
+    const eq = cont.querySelector(`[data-equiv="${ruta}"]`);
+    if (eq) eq.textContent = equivalencia(valor);
     if (ev.type === 'change') aviso('Guardado ✓');
   }
   cont.addEventListener('input', alCambiar);

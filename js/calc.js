@@ -19,7 +19,7 @@ export function trabajoVacio(a) {
     zonas: [zonaVacia(1)],
     poda: [],
     fumigacion: [],
-    restos: { activo: false, modo: 'fijo', m3: '' },
+    restos: { destino: 'triturar', modo: 'fijo', m3: '' },
     desplazamiento: { activo: true, km: '' },
     irpf: !!a.irpfPorDefecto,
   };
@@ -49,7 +49,8 @@ export function calcular(t, a) {
       (a.factores.pendiente[z.pendiente] ?? 1);
     const precioHora = num(a.maquinas[z.maquina]?.precioHora);
     const valida = superficie > 0 && rendimiento > 0;
-    const horas = valida ? (superficie / rendimiento) * factor : 0;
+    // Las horas se redondean a centésimas (3,40 h) y con ellas se calcula el precio
+    const horas = valida ? redondear((superficie / rendimiento) * factor) : 0;
     return {
       id: z.id,
       superficie,
@@ -82,9 +83,10 @@ export function calcular(t, a) {
   });
   const fumigacionTotal = redondear(fumigacion.reduce((s, f) => s + f.importe, 0));
 
-  // 4) Retirada de restos (opcional)
+  // 4) Restos: triturar o amontonar no se cobra aparte; la retirada sí
+  const destinoRestos = t.restos?.destino ?? (t.restos?.activo ? 'retirar' : 'triturar');
   let restos = 0;
-  if (t.restos?.activo) {
+  if (destinoRestos === 'retirar') {
     restos = t.restos.modo === 'm3' ? redondear(num(t.restos.m3) * num(a.restos.m3)) : num(a.restos.fijo);
   }
 
@@ -107,8 +109,10 @@ export function calcular(t, a) {
   const base = redondear(subtotal + ajusteMinimo);
 
   // 7) Impuestos
-  const ivaPct = num(a.iva);
-  const irpfPct = t.irpf ? num(a.irpf) : 0;
+  // Los presupuestos antiguos (sin este ajuste) llevaban impuestos
+  const conImpuestos = a.aplicarImpuestos !== false;
+  const ivaPct = conImpuestos ? num(a.iva) : 0;
+  const irpfPct = conImpuestos && t.irpf ? num(a.irpf) : 0;
   const iva = redondear((base * ivaPct) / 100);
   const irpf = redondear((base * irpfPct) / 100);
   const total = redondear(base + iva - irpf);
@@ -117,7 +121,7 @@ export function calcular(t, a) {
     zonas, horas, superficie, desbroce,
     poda, podaTotal,
     fumigacion, fumigacionTotal,
-    restos, desplazamiento, kmCobrados,
+    destinoRestos, restos, desplazamiento, kmCobrados, conImpuestos,
     subtotal, minima, ajusteMinimo, base,
     ivaPct, iva, irpfPct, irpf, total,
   };

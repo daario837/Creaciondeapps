@@ -1,6 +1,6 @@
 // Service worker: guarda la app en el móvil para que funcione sin cobertura.
 // IMPORTANTE: cambiar VERSION cada vez que se publique una actualización.
-const VERSION = 'dlz-v2';
+const VERSION = 'dlz-v3';
 
 const ARCHIVOS = [
   './',

@@ -17,10 +17,29 @@ export const MALEZAS = [
   { id: 'rebrotes', nombre: 'Rebrotes' },
 ];
 
+// Cada nivel: [id, nombre, pista para elegirlo en la finca]
 export const FACTORES = [
-  { id: 'densidad', nombre: 'Densidad', niveles: [['baja', 'Baja'], ['media', 'Media'], ['alta', 'Alta']] },
-  { id: 'altura', nombre: 'Altura', niveles: [['baja', 'Baja'], ['media', 'Media'], ['alta', 'Alta']] },
-  { id: 'pendiente', nombre: 'Pendiente', niveles: [['llano', 'Llano'], ['media', 'Media'], ['fuerte', 'Fuerte']] },
+  { id: 'densidad', nombre: 'Densidad', niveles: [
+    ['baja', 'Baja', 'Se ve el suelo'],
+    ['media', 'Media', 'Se ve algo de suelo'],
+    ['alta', 'Alta', 'No se entra andando'],
+  ] },
+  { id: 'altura', nombre: 'Altura', niveles: [
+    ['baja', 'Baja', 'Hasta 0,5 m'],
+    ['media', 'Media', '0,5 a 1,5 m'],
+    ['alta', 'Alta', 'Más de 1,5 m'],
+  ] },
+  { id: 'pendiente', nombre: 'Pendiente', niveles: [
+    ['llano', 'Llano', 'Plano o ligera'],
+    ['media', 'Media', 'Pronunciada'],
+    ['fuerte', 'Fuerte', 'Ladera fuerte'],
+  ] },
+];
+
+export const DESTINOS_RESTOS = [
+  { id: 'triturar', nombre: 'Se trituran y quedan', texto: 'Los restos se trituran y quedan en la finca' },
+  { id: 'amontonar', nombre: 'Se amontonan', texto: 'Los restos se amontonan dentro de la finca' },
+  { id: 'retirar', nombre: 'Se retiran', texto: 'Los restos se cargan y se retiran de la finca' },
 ];
 
 export const TAMANOS_ARBOL = [
@@ -63,6 +82,7 @@ export function ajustesPorDefecto() {
     },
     desplazamiento: { modo: 'km', fijo: 20, precioKm: 0.4, idaVuelta: true },
     tarifaMinima: 80,
+    aplicarImpuestos: false, // de momento los presupuestos van sin IVA ni IRPF
     iva: 21,
     irpf: 15,
     irpfPorDefecto: false,
@@ -73,6 +93,10 @@ export function ajustesPorDefecto() {
       serie: '', // letra o prefijo opcional para distinguir dispositivos (p. ej. "A")
       validezDias: 30,
       formaPago: 'Transferencia bancaria o efectivo al terminar el trabajo',
+      plazo: 'A convenir con el cliente',
+      condiciones:
+        'No incluye trabajos que no aparezcan en este presupuesto. ' +
+        'Si aparecen obstáculos que no se veían (piedras, chatarra, muros ocultos) y obligan a cambiar el trabajo, se avisará al cliente antes de seguir.',
     },
   };
 }

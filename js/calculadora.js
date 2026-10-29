@@ -1,5 +1,5 @@
 // Pantalla "Calcular": zonas de desbroce, poda, fumigación, restos y total.
-import { ajustes, leer, escribir, MAQUINAS, MALEZAS, FACTORES, TAMANOS_ARBOL } from './store.js';
+import { ajustes, leer, escribir, MAQUINAS, MALEZAS, FACTORES, TAMANOS_ARBOL, DESTINOS_RESTOS } from './store.js';
 import { calcular, trabajoVacio, zonaVacia, num } from './calc.js';
 import { esc, euros, numero, horas, $, confirmar, escribirRuta, leerRuta, aviso, paraEditar } from './ui.js';
 import { htmlDesglose } from './desglose.js';
@@ -24,6 +24,8 @@ function borradorNuevo(clienteId = null) {
     clienteId,
     validezDias: a.presupuestos.validezDias,
     formaPago: a.presupuestos.formaPago,
+    plazo: a.presupuestos.plazo,
+    condiciones: a.presupuestos.condiciones,
     notas: '',
     editando: null, // id del presupuesto si se está modificando uno ya guardado
     precios: null, // precios propios del presupuesto que se edita
@@ -34,6 +36,11 @@ function cargarBorrador() {
   const b = leer('borrador');
   if (!b) return borradorNuevo();
   if (b.zonas) return { ...borradorNuevo(), trabajo: b }; // formato de la versión 1
+  const nuevo = borradorNuevo();
+  b.plazo ??= nuevo.plazo; // borradores de la versión 2
+  b.condiciones ??= nuevo.condiciones;
+  const r = b.trabajo.restos;
+  r.destino ??= r.activo ? 'retirar' : 'triturar';
   return b;
 }
 
@@ -69,6 +76,8 @@ export async function abrirEnCalculadora(p, copia = false) {
     clienteId: p.clienteId,
     validezDias: p.validezDias,
     formaPago: p.formaPago,
+    plazo: p.plazo ?? ajustes().presupuestos.plazo,
+    condiciones: p.condiciones ?? ajustes().presupuestos.condiciones,
     notas: p.notas || '',
     editando: copia ? null : p.id,
     precios: copia ? null : p.precios,
@@ -118,7 +127,7 @@ export function vistaCalculadora(cont) {
         </div></fieldset>
       ${FACTORES.map((f) => `<fieldset><legend>${f.nombre}</legend>
         <div class="opciones opciones-3">
-          ${f.niveles.map(([id, txt]) => opcion(n + f.id, `zonas.${i}.${f.id}`, id, z[f.id], txt, x(a.factores[f.id][id]))).join('')}
+          ${f.niveles.map(([id, txt, pista]) => opcion(n + f.id, `zonas.${i}.${f.id}`, id, z[f.id], txt, `${pista}<br>${x(a.factores[f.id][id])}`)).join('')}
         </div></fieldset>`).join('')}
       <div class="resultado-linea" id="res-${z.id}"></div>
     </section>`;
@@ -159,9 +168,11 @@ export function vistaCalculadora(cont) {
     const d = a.desplazamiento;
     return `<section class="tarjeta">
       <h3>➕ Extras</h3>
-      <label class="interruptor"><input type="checkbox" data-campo="restos.activo" data-rerender ${t.restos.activo ? 'checked' : ''}>
-        <span>Retirada de restos</span></label>
-      ${t.restos.activo ? `<div class="sub-bloque">
+      <fieldset><legend>¿Qué se hace con los restos?</legend>
+        <div class="opciones opciones-3">
+          ${DESTINOS_RESTOS.map((d) => opcion('destino-restos', 'restos.destino', d.id, t.restos.destino, d.nombre, d.id === 'retirar' ? 'se cobra' : 'incluido', true)).join('')}
+        </div></fieldset>
+      ${t.restos.destino === 'retirar' ? `<div class="sub-bloque">
         <div class="opciones opciones-2">
           ${opcion('restos', 'restos.modo', 'fijo', t.restos.modo, 'Precio fijo', euros(a.restos.fijo), true)}
           ${opcion('restos', 'restos.modo', 'm3', t.restos.modo, 'Por m³', euros(a.restos.m3) + '/m³', true)}
@@ -176,8 +187,8 @@ export function vistaCalculadora(cont) {
               `${euros(d.precioKm)}/km${d.idaVuelta ? ', se cobra ida y vuelta' : ''}`)
           : `<p class="nota">Precio fijo de desplazamiento: <b>${euros(d.fijo)}</b></p>`}
       </div>` : ''}
-      <label class="interruptor"><input type="checkbox" data-campo="irpf" ${t.irpf ? 'checked' : ''}>
-        <span>Aplicar retención de IRPF <small>${numero(a.irpf)} % (si el cliente es empresa o autónomo)</small></span></label>
+      ${a.aplicarImpuestos !== false ? `<label class="interruptor"><input type="checkbox" data-campo="irpf" ${t.irpf ? 'checked' : ''}>
+        <span>Aplicar retención de IRPF <small>${numero(a.irpf)} % (si el cliente es empresa o autónomo)</small></span></label>` : ''}
     </section>`;
   }
 
@@ -197,11 +208,18 @@ export function vistaCalculadora(cont) {
     return `<section class="tarjeta">
       <h3>📋 Condiciones</h3>
       ${campoDoc('validezDias', 'Validez del presupuesto', 'días', 'numeric')}
+      <div class="chips">
+        ${[15, 30].map((d) => `<button class="chip" data-accion="poner" data-doc-campo="validezDias" data-texto="${d}">${d} días</button>`).join('')}
+      </div>
       <label class="campo"><span class="campo-etiqueta">Forma de pago</span>
         <textarea data-doc="formaPago" rows="2">${esc(b.formaPago)}</textarea></label>
       <div class="chips">
-        ${FORMAS_PAGO.map((f) => `<button class="chip" data-accion="forma-pago" data-texto="${esc(f)}">${esc(f)}</button>`).join('')}
+        ${FORMAS_PAGO.map((f) => `<button class="chip" data-accion="poner" data-doc-campo="formaPago" data-texto="${esc(f)}">${esc(f)}</button>`).join('')}
       </div>
+      <label class="campo"><span class="campo-etiqueta">Plazo (cuándo se puede hacer)</span>
+        <input type="text" class="input-texto" data-doc="plazo" value="${esc(b.plazo)}" placeholder="Ej.: en las próximas 2 semanas"></label>
+      <label class="campo"><span class="campo-etiqueta">Condiciones (qué no incluye, obstáculos…)</span>
+        <textarea data-doc="condiciones" rows="4">${esc(b.condiciones)}</textarea></label>
       <label class="campo"><span class="campo-etiqueta">Observaciones (salen en el presupuesto)</span>
         <textarea data-doc="notas" rows="3" placeholder="Ej.: el cliente retira la leña">${esc(b.notas)}</textarea></label>
     </section>`;
@@ -247,7 +265,7 @@ export function vistaCalculadora(cont) {
       <div class="espacio-total"></div>
 
       <button class="barra-total" data-accion="ver-desglose">
-        <span class="barra-total-info"><span id="total-horas"></span><small>Total con IVA</small></span>
+        <span class="barra-total-info"><span id="total-horas"></span><small>${a.aplicarImpuestos !== false ? 'Total con IVA' : 'Total (IVA no incluido)'}</small></span>
         <span class="barra-total-importe" id="total-importe"></span>
       </button>`;
     actualizar();
@@ -337,8 +355,8 @@ export function vistaCalculadora(cont) {
       const id = await elegirCliente();
       if (!id) return;
       b.clienteId = id;
-    } else if (acc === 'forma-pago') {
-      b.formaPago = boton.dataset.texto;
+    } else if (acc === 'poner') {
+      b[boton.dataset.docCampo] = boton.dataset.texto;
     } else if (acc === 'precios-actuales') {
       if (!(await confirmar('¿Recalcular este presupuesto con los precios actuales de Ajustes?', { si: 'Sí, recalcular' }))) return;
       b.precios = null;
@@ -379,6 +397,8 @@ export function vistaCalculadora(cont) {
       precios: b.precios || copiaPrecios(),
       validezDias: Math.round(num(b.validezDias)) || 30,
       formaPago: b.formaPago.trim(),
+      plazo: (b.plazo || '').trim(),
+      condiciones: (b.condiciones || '').trim(),
       notas: b.notas.trim(),
     });
     escribir('borrador', borradorNuevo());

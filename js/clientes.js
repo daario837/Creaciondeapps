@@ -24,6 +24,36 @@ export function enlaceMapa(c) {
   return '';
 }
 
+// Referencia catastral: 14 caracteres identifican la parcela (20 con el inmueble y el control).
+// En fincas rústicas: provincia (2) + municipio (3) + sector (1 letra) + polígono (3) + parcela (5).
+export function infoCatastro(valor) {
+  const rc = String(valor || '').toUpperCase().replace(/[\s.-]/g, '');
+  if (!rc) return null;
+  if (!/^[0-9A-Z]{14}([0-9A-Z]{6})?$/.test(rc)) {
+    return { ok: false, texto: 'Revisa la referencia: debe tener 14 o 20 letras y números (está en el recibo del IBI).' };
+  }
+  const rc14 = rc.slice(0, 14);
+  const rustica = /^\d{5}[A-Z]\d{8}$/.test(rc14);
+  const foral = ['01', '20', '48', '31'].includes(rc.slice(0, 2)); // País Vasco y Navarra
+  return {
+    ok: true,
+    rc14,
+    rustica,
+    foral,
+    enlace: `https://www1.sedecatastro.gob.es/CYCBienInmueble/OVCListaBienes.aspx?rc1=${rc14.slice(0, 7)}&rc2=${rc14.slice(7)}`,
+    texto: rustica
+      ? `Finca rústica · Polígono ${+rc14.slice(6, 9)} · Parcela ${+rc14.slice(9)}`
+      : 'Finca urbana',
+  };
+}
+
+function htmlInfoCatastro(valor) {
+  const i = infoCatastro(valor);
+  if (!i) return '';
+  if (!i.ok) return `<div class="catastro-info alerta">⚠️ ${i.texto}</div>`;
+  return `<div class="catastro-info">✅ ${i.texto}${i.foral ? '<br><small>País Vasco y Navarra tienen su propio catastro (foral).</small>' : ''}</div>`;
+}
+
 export const htmlEstado = (estado) => {
   const e = ESTADOS.find((x) => x.id === estado) || ESTADOS[0];
   return `<span class="estado estado-${e.id}">${e.icono} ${e.nombre}</span>`;
@@ -72,6 +102,9 @@ export function vistaCliente(cont, id) {
       ${dato('Teléfono', c.telefono)}
       ${dato('Dirección', c.direccion)}
       ${dato('Referencia catastral', c.catastro)}
+      ${c.catastro ? htmlInfoCatastro(c.catastro) : ''}
+      ${infoCatastro(c.catastro)?.ok && !infoCatastro(c.catastro).foral
+        ? `<a class="btn btn-secundario btn-ancho" href="${infoCatastro(c.catastro).enlace}" target="_blank" rel="noopener">🏛️ Ver la finca en el Catastro</a>` : ''}
       ${dato('Notas', c.notas)}
       <a class="btn btn-secundario btn-ancho" href="#cliente-editar/${c.id}">✏️ Editar datos</a>
     </section>
@@ -121,6 +154,7 @@ export function vistaEditarCliente(cont, id) {
     </form>`;
 
   activarUbicacion(cont);
+  $('[name="catastro"]', cont).addEventListener('input', (e) => ($('[data-info-catastro]', cont).innerHTML = htmlInfoCatastro(e.target.value)));
   $('#form-cliente', cont).addEventListener('submit', (e) => {
     e.preventDefault();
     const datos = leerCampos(cont);
@@ -140,7 +174,8 @@ function camposCliente(c, completo = true) {
     ${campo('telefono', 'Teléfono', c.telefono, 'tel', 'autocomplete="off"')}
     ${campo('direccion', 'Dirección de la finca', c.direccion, 'text', 'autocomplete="off"')}
     ${completo ? `
-    ${campo('catastro', 'Referencia catastral', c.catastro, 'text', 'autocomplete="off" autocapitalize="characters"')}
+    ${campo('catastro', 'Referencia catastral', c.catastro, 'text', 'autocomplete="off" autocapitalize="characters" placeholder="Está en el recibo del IBI"')}
+    <div data-info-catastro>${htmlInfoCatastro(c.catastro)}</div>
     <label class="campo"><span class="campo-etiqueta">Enlace de Google Maps</span>
       <input type="url" name="maps" value="${esc(c.maps)}" placeholder="Pega aquí el enlace" autocomplete="off"></label>
     <button type="button" class="btn btn-secundario btn-ancho" data-ubicacion>📍 Estoy en la finca: usar mi ubicación</button>

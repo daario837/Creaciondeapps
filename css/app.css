@@ -331,3 +331,10 @@ textarea:focus { outline: none; border-color: var(--verde); box-shadow: 0 0 0 3p
 .modal-alto { max-height: 88vh; overflow-y: auto; align-self: flex-start; margin-top: max(20px, env(safe-area-inset-top)); }
 .modal-cabecera { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .modal-cabecera h3 { font-size: 22px; color: var(--verde); }
+
+/* ===== Retoques (guías) ===== */
+.horas-grande small { display: block; font-size: 16px; color: var(--texto-suave); margin-top: 2px; }
+.equivalencia { display: block; text-align: right; font-size: 15px; color: var(--texto-suave); margin: -4px 0 8px; }
+.catastro-info { background: var(--verde-claro); border-radius: 12px; padding: 10px 14px; margin: -6px 0 14px; font-size: 17px; color: var(--verde); }
+.catastro-info.alerta { background: #FDECEA; color: var(--rojo); }
+.campo-etiqueta small { font-weight: 400; color: var(--texto-suave); font-size: 15px; }

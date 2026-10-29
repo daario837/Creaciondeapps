@@ -5,7 +5,7 @@ const fmtNum = (dec) => new Intl.NumberFormat('es-ES', { maximumFractionDigits: 
 
 export const euros = (n) => fmtEuro.format(n || 0);
 export const numero = (n, dec = 2) => fmtNum(dec).format(n || 0);
-export const horas = (h) => numero(h, 1) + ' h';
+export const horas = (h) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(h || 0) + ' h';
 
 // Evita que un texto escrito por el usuario rompa la página
 export function esc(s) {

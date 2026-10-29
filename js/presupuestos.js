@@ -91,6 +91,8 @@ export function vistaPresupuesto(cont, id) {
       <h3>📋 Condiciones</h3>
       <div class="dato"><span>Validez</span><p>${p.validezDias} días</p></div>
       ${p.formaPago ? `<div class="dato"><span>Forma de pago</span><p>${esc(p.formaPago)}</p></div>` : ''}
+      ${p.plazo ? `<div class="dato"><span>Plazo</span><p>${esc(p.plazo)}</p></div>` : ''}
+      ${p.condiciones ? `<div class="dato"><span>Condiciones</span><p>${esc(p.condiciones)}</p></div>` : ''}
       ${p.notas ? `<div class="dato"><span>Observaciones</span><p>${esc(p.notas)}</p></div>` : ''}
     </section>
 
