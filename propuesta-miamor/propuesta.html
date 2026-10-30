@@ -1,0 +1,621 @@
+<title>Propuesta para miamor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Figtree:wght@400;500;600;700&family=Caveat:wght@500;700&display=swap">
+<style>
+/* Layout: una sola columna estrecha, como una tarjeta de invitación que se va rellenando a mano; tinta roja sobre papel crema */
+:root {
+  --paper: #fdf8f3;
+  --card: #ffffff;
+  --ink: #2b1d20;
+  --muted: #8a7176;
+  --line: #eadfd9;
+  --red: #d0324a;
+  --red-soft: #fbe4e7;
+  --pink: #f4b8c2;
+  --shadow: 0 1px 2px rgba(80, 30, 40, .06), 0 8px 24px rgba(80, 30, 40, .07);
+  --f-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-hand: "Caveat", "Bradley Hand", "Segoe Print", cursive;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1c1416; --card: #261b1e; --ink: #f6ebe9; --muted: #b59ca1; --line: #3d2d31;
+    --red: #ff6b80; --red-soft: #45242b; --pink: #7a3a47;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #1c1416; --card: #261b1e; --ink: #f6ebe9; --muted: #b59ca1; --line: #3d2d31;
+  --red: #ff6b80; --red-soft: #45242b; --pink: #7a3a47;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+
+/* cabecera: progreso con corazones */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
+.back {
+  font: 500 15px var(--f-body); color: var(--muted); background: none; border: 0; padding: 8px 4px; cursor: pointer;
+  border-radius: 8px;
+}
+.back:hover { color: var(--red); }
+.hearts { display: flex; gap: 6px; }
+.hearts span { width: 14px; height: 14px; display: block; color: var(--line); transition: color .3s, transform .3s; }
+.hearts span.on { color: var(--red); transform: scale(1.1); }
+.hearts svg { width: 100%; height: 100%; display: block; }
+
+/* pantallas */
+.screen { display: flex; flex-direction: column; gap: 22px; padding-top: 12px; }
+.screen.enter { animation: rise .45s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+h1, h2 { font-family: var(--f-display); font-weight: 400; letter-spacing: -.01em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(44px, 12vw, 64px); line-height: .98; }
+h1 em, h2 em { color: var(--red); }
+h2 { font-size: clamp(30px, 8vw, 38px); line-height: 1.08; }
+p { margin: 0; }
+.eyebrow { font: 600 12px var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: var(--red); }
+.lead { font-size: 18px; color: var(--ink); max-width: 34ch; }
+.hand { font-family: var(--f-hand); font-size: 25px; line-height: 1.15; color: var(--red); }
+.note { font-size: 14px; color: var(--muted); }
+
+/* portada */
+.cover-art { width: 100%; max-width: 100%; height: auto; display: block; color: var(--red); }
+.cover-art .soft { color: var(--pink); }
+.revenge {
+  background: var(--card); border: 1px dashed var(--pink); border-radius: 14px; padding: 16px 18px;
+  transform: rotate(-1deg);
+}
+
+/* botones */
+.btn {
+  appearance: none; border: 0; cursor: pointer;
+  font: 600 17px var(--f-body);
+  padding: 17px 22px; border-radius: 999px;
+  background: var(--red); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  transition: transform .15s ease, box-shadow .2s ease, opacity .2s;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--red) 35%, transparent);
+  width: 100%;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .35; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); box-shadow: none; }
+.btn.ghost:hover { border-color: var(--red); color: var(--red); }
+.btn.small { font-size: 15px; padding: 13px 18px; }
+.link { background: none; border: 0; color: var(--muted); font: 500 15px var(--f-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 8px; }
+.link:hover { color: var(--red); }
+:focus-visible { outline: 2.5px solid var(--red); outline-offset: 3px; }
+.actions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+
+/* tarjetas de opción */
+.options { display: grid; gap: 12px; grid-template-columns: 1fr; }
+.options.three { grid-template-columns: 1fr; }
+.opt {
+  appearance: none; text-align: left; cursor: pointer; width: 100%;
+  font: inherit; color: inherit;
+  display: grid; grid-template-columns: 76px 1fr 26px; align-items: center; gap: 14px;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 18px;
+  padding: 14px 16px 14px 12px;
+  box-shadow: var(--shadow);
+  transition: border-color .2s, transform .15s, background .2s;
+}
+.opt:hover { border-color: var(--pink); transform: translateY(-1px); }
+.opt:active { transform: scale(.98); }
+.opt .art { width: 76px; height: 64px; border-radius: 12px; background: var(--red-soft); color: var(--red); display: grid; place-items: center; }
+.opt .art svg { width: 58px; height: 46px; }
+.opt .txt { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.opt .t { font-weight: 600; font-size: 17px; line-height: 1.25; }
+.opt .d { font-size: 14px; color: var(--muted); line-height: 1.4; }
+.opt .tick {
+  width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line);
+  display: grid; place-items: center; color: transparent; transition: all .25s;
+}
+.opt.multi .tick { border-radius: 8px; }
+.opt[aria-pressed="true"] { border-color: var(--red); background: color-mix(in srgb, var(--red-soft) 45%, var(--card)); }
+.opt[aria-pressed="true"] .tick { background: var(--red); border-color: var(--red); color: #fff; animation: pop .35s ease; }
+@keyframes pop { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+/* cargando */
+.calc { display: flex; flex-direction: column; align-items: center; gap: 18px; padding-block: 80px; text-align: center; }
+.beat { width: 64px; height: 64px; color: var(--red); animation: beat 1s ease-in-out infinite; }
+@keyframes beat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.18); } 30% { transform: scale(1); } 45% { transform: scale(1.12); } }
+
+/* itinerario */
+.story { font-family: var(--f-display); font-style: italic; font-size: 22px; line-height: 1.35; }
+.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.moment { display: grid; grid-template-columns: 44px 1fr; gap: 14px; position: relative; padding-bottom: 22px; }
+.moment::before { content: ""; position: absolute; left: 21px; top: 44px; bottom: 0; width: 1.5px; background: repeating-linear-gradient(to bottom, var(--pink) 0 5px, transparent 5px 10px); }
+.moment:last-child::before { display: none; }
+.moment .dot { width: 44px; height: 44px; border-radius: 50%; background: var(--red-soft); color: var(--red); display: grid; place-items: center; }
+.moment .dot svg { width: 30px; height: 24px; }
+.moment .body { min-width: 0; padding-top: 2px; display: flex; flex-direction: column; gap: 4px; }
+.moment .when { font: 600 12px var(--f-body); letter-spacing: .12em; text-transform: uppercase; color: var(--red); display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+.moment .when small { font-weight: 500; letter-spacing: .02em; text-transform: none; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.moment h3 { font: 600 18px/1.3 var(--f-body); margin: 0; }
+.moment p { color: var(--ink); opacity: .86; font-size: 15.5px; }
+.moment.show { animation: rise .5s cubic-bezier(.2,.8,.2,1) both; }
+.closing { text-align: center; font-family: var(--f-hand); font-size: 30px; color: var(--red); line-height: 1.15; padding-block: 6px; }
+
+/* confirmado */
+.status {
+  border-radius: 14px; padding: 14px 16px; font-size: 15px; display: flex; gap: 10px; align-items: flex-start;
+  background: var(--card); border: 1.5px solid var(--line);
+}
+.status.ok { border-color: var(--red); }
+.summary {
+  width: 100%; min-height: 220px; resize: vertical; font: 14px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+  background: var(--card); color: var(--ink); border: 1.5px solid var(--line); border-radius: 14px; padding: 14px;
+}
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+a.btn { text-decoration: none; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: var(--paper); padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 600;
+  opacity: 0; transition: all .3s; pointer-events: none; z-index: 20;
+}
+.toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* panel del propietario */
+.inbox { border-top: 1px dashed var(--line); margin-top: 30px; padding-top: 22px; display: flex; flex-direction: column; gap: 12px; }
+.inbox h4 { margin: 0; font: 600 13px var(--f-body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.entry { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 14px; font-size: 14px; display: flex; flex-direction: column; gap: 6px; }
+.entry pre { margin: 0; white-space: pre-wrap; word-break: break-word; font: 13px/1.5 ui-monospace, Menlo, monospace; color: var(--muted); }
+.pill { align-self: flex-start; font: 600 12px var(--f-body); padding: 3px 10px; border-radius: 999px; background: var(--red-soft); color: var(--red); }
+
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 15; overflow: hidden; }
+.confetti span { position: absolute; top: -30px; color: var(--red); animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(260deg); opacity: .2; } }
+
+@media (min-width: 560px) {
+  .wrap { padding-block: 40px 64px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+</style>
+
+<div class="wrap">
+  <div class="top" id="top" hidden>
+    <button class="back" id="back" type="button">← Atrás</button>
+    <div class="hearts" id="hearts" aria-hidden="true"></div>
+  </div>
+  <main id="app"></main>
+  <section class="inbox" id="inbox" hidden>
+    <h4>Respuestas recibidas (solo lo ves tú)</h4>
+    <div id="inboxList" class="note">Aún no ha llegado nada.</div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  // ——— Ilustraciones (línea fina, tinta roja) ———
+  const S = (inner, vb = "0 0 64 48") =>
+    `<svg viewBox="${vb}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+  const HEART_PATH = "M12 21s-7.5-4.6-9.6-9.2C.9 8.6 2.9 4.5 6.7 4.5c2.2 0 3.6 1.2 5.3 3.1 1.7-1.9 3.1-3.1 5.3-3.1 3.8 0 5.8 4.1 4.3 7.3C19.5 16.4 12 21 12 21z";
+  const heart = (fill = true) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${HEART_PATH}" fill="${fill ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.6"/></svg>`;
+  const ART = {
+    cama: S(`<path d="M6 38V18"/><path d="M58 38V28"/><path d="M6 30h52"/><path d="M6 38h52"/><rect x="10" y="22" width="12" height="8" rx="3"/><path d="M28 30v-6h16v6"/><path d="M33 24c0-3 2-3 2-6M39 24c0-3 2-3 2-6"/><path d="M46 14h12v9H46z"/><path d="M52 23v3"/>`),
+    fuera: S(`<path d="M14 22h24v8a10 10 0 0 1-10 10h-4a10 10 0 0 1-10-10z"/><path d="M38 25h3a4 4 0 0 1 0 8h-4"/><path d="M8 42h36"/><path d="M22 16c0-3 2-3 2-6M30 16c0-3 2-3 2-6"/><path d="M46 38c2-8 12-8 14 0-4 2-10 2-14 0z"/><path d="M50 36l2-4M55 36l-1-4"/>`),
+    playa: S(`<circle cx="50" cy="12" r="5"/><path d="M4 36c5-4 9-4 14 0s9 4 14 0 9-4 14 0 9 4 14 0"/><path d="M4 43c5-4 9-4 14 0s9 4 14 0 9-4 14 0 9 4 14 0"/><path d="M24 34L16 10"/><path d="M4 16c8-8 20-10 26-4z"/>`),
+    casa: S(`<path d="M10 36V24a4 4 0 0 1 4-4h36a4 4 0 0 1 4 4v12"/><path d="M6 28a4 4 0 0 1 8 0v10h36V28a4 4 0 0 1 8 0v12H6z"/><path d="M14 40v4M50 40v4"/><path d="M32 16s-6-3.6-6-7.2C26 6.4 28.6 5 30.2 6c.9.5 1.5 1.3 1.8 2 .3-.7.9-1.5 1.8-2 1.6-1 4.2.4 4.2 2.8 0 3.6-6 7.2-6 7.2z"/>`),
+    pasta: S(`<ellipse cx="30" cy="32" rx="24" ry="9"/><path d="M14 30c4-8 28-8 32 0"/><path d="M20 28c3 2 6-2 9 0s6-2 9 0 4 0 5 1"/><path d="M22 24c2-3 6 1 8-2s6 1 8-1"/><path d="M52 6l-8 22M56 8l-8 22M54 7l-8 22"/>`),
+    burger: S(`<path d="M12 22a20 12 0 0 1 40 0z"/><path d="M10 26h44"/><path d="M10 30c4 3 8-3 12 0s8-3 12 0 8-3 12 0 6-2 8 0"/><path d="M12 34h40v2a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6z"/><path d="M24 15l1 1M32 13l1 1M40 15l1 1"/>`),
+    italiano: S(`<path d="M10 12l42 10L24 44z"/><path d="M10 12c3-4 40 5 42 10"/><circle cx="26" cy="22" r="3"/><circle cx="34" cy="28" r="2.5"/><circle cx="25" cy="33" r="2.5"/>`),
+    paseo: S(`<path d="M16 40c-4 0-5-5-4-10s3-8 6-8 4 4 3 9-2 9-5 9z"/><path d="M14 44h5"/><path d="M42 30c-4 0-5-5-4-10s3-8 6-8 4 4 3 9-2 9-5 9z"/><path d="M40 34h5"/><path d="M28 44c4-4 8-2 10-8" stroke-dasharray="2 4"/>`),
+    fotos: S(`<rect x="8" y="14" width="48" height="28" rx="5"/><path d="M22 14l3-5h14l3 5"/><circle cx="32" cy="28" r="8"/><path d="M48 20h2"/>`),
+    sorpresa: S(`<rect x="12" y="22" width="40" height="20" rx="2"/><path d="M8 16h48v6H8z"/><path d="M32 16v26"/><path d="M32 16c-4-8-14-8-12-2 1 3 8 2 12 2zM32 16c4-8 14-8 12-2-1 3-8 2-12 2z"/>`),
+    siesta: S(`<path d="M36 10a14 14 0 1 0 14 20 12 12 0 0 1-14-20z"/><path d="M46 8h6l-6 7h6"/>`),
+  };
+  const CHECK = `<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>`;
+
+  // ——— Contenido ———
+  const STEPS = [
+    {
+      key: "manana", eyebrow: "Paso 1 · La mañana",
+      q: "Primero, ¿qué plan te llama más para empezar la mañana, <em>mibaby</em>?",
+      hand: "Aquí empieza todo…",
+      options: [
+        { id: "cama", t: "Desayuno y serie en la cama", d: "Lo preparo todo yo, mi preciosa. O juntos, si te apetece más." },
+        { id: "fuera", t: "Desayunar fuera", d: "Ir a desayunar a un sitio chuli los dos juntos." },
+      ],
+    },
+    {
+      key: "mediodia", eyebrow: "Paso 2 · El resto de la mañana",
+      q: "Vale, el plan de la mañana está en tus manos. <em>Ahora viene lo importante…</em>",
+      hand: "¿Y qué hacemos el resto de la mañana, cariño?",
+      options: [
+        { id: "playa", t: "Ir a la playa", d: "Con pareooooo. Obligatorio." },
+        { id: "casa", t: "Vaguear en casa", d: "Vagueamos y hacemos una comida chuli juntos." },
+      ],
+    },
+    {
+      key: "comida", eyebrow: "Paso 3 · Qué comemos",
+      q: "Pregunta seria: ¿qué <em>comemos</em>?",
+      hand: "Piénsalo bien, que esto es sagrado",
+      options: [
+        { id: "pasta", t: "Pasta buena", d: "Cocinada por mí. Con amor y bastante queso." },
+        { id: "burger", t: "Hamburgueseríaaa", d: "Hamburguesa de las que se comen con las dos manos." },
+        { id: "italiano", t: "Italiano", d: "Pizza, pasta, tiramisú… lo que te pida el cuerpo." },
+      ],
+    },
+    {
+      key: "extras", multi: true, eyebrow: "Paso 4 · Opcional",
+      q: "¿Algún extra para la tarde, <em>tempranito</em>?",
+      hand: "Puedes elegir varios, o ninguno",
+      options: [
+        { id: "paseo", t: "Un paseo juntos", d: "Para bajar la comida y estar un rato más tú y yo." },
+        { id: "fotos", t: "Hacernos fotos bonitas", d: "Tú posas, yo intento estar a la altura." },
+        { id: "sorpresa", t: "Sorpresa", d: "Elige tú, que confío en ti." },
+      ],
+    },
+  ];
+  const LABEL = {};
+  STEPS.forEach(s => s.options.forEach(o => (LABEL[o.id] = o.t)));
+  LABEL.burger = "Hamburguesería";
+
+  // ——— Estado ———
+  const state = { screen: "cover", step: 0, manana: null, mediodia: null, comida: null, extras: [], estado: null };
+  try { Object.assign(state, JSON.parse(localStorage.getItem("miamor-draft") || "{}"), { screen: "cover", step: 0, estado: null }); } catch (e) {}
+  const persist = () => { try { localStorage.setItem("miamor-draft", JSON.stringify({ manana: state.manana, mediodia: state.mediodia, comida: state.comida, extras: state.extras })); } catch (e) {} };
+
+  const app = document.getElementById("app");
+  const top = document.getElementById("top");
+  const hearts = document.getElementById("hearts");
+  const toastEl = document.getElementById("toast");
+  const toast = (msg) => { toastEl.textContent = msg; toastEl.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => toastEl.classList.remove("on"), 2200); };
+
+  // ——— Itinerario ———
+  function buildPlan(s) {
+    const { manana: m, mediodia: d, comida: c, extras: x } = s;
+    const sale = c !== "pasta";
+    const stories = {
+      "playa-burger": "Mañana de mar y sal, y luego una hamburguesa de las buenas. El sábado perfecto para acabar con arena hasta en los bolsillos y la tripa feliz.",
+      "playa-pasta": "Playa por la mañana y de vuelta a casa: mientras te duchas, yo me pongo con la pasta. Tú solo tienes que llegar con hambre.",
+      "playa-italiano": "Sol, pareo y después un italiano. Un sábado con un poquito de vacaciones en Italia sin coger ningún avión.",
+      "casa-pasta": "Un sábado de los nuestros: casa, manta, nada de prisa y una pasta buena hecha por mí, contigo de pinche si te apetece.",
+      "casa-burger": "Mañana de vagueo absoluto en casa y, cuando apriete el hambre, salimos a por una hamburguesa como dios manda.",
+      "casa-italiano": "Mañana tranquilita en casa, sin alarmas ni prisas, y para comer nos vamos a un italiano a darnos un homenaje.",
+    };
+    const moments = [];
+    moments.push(m === "cama"
+      ? { when: "Por la mañana", time: "hacia las 10", art: "cama", title: "Desayuno y serie en la cama",
+          text: "Te despierto con el desayuno ya preparado (o lo hacemos juntos, como prefieras). Elegimos serie, manta por encima y ninguna prisa." }
+      : { when: "Por la mañana", time: "hacia las 10", art: "fuera", title: "Desayuno en un sitio chuli",
+          text: "Nos arreglamos lo justo y salimos a desayunar juntos. Café, algo rico y tú decidiendo qué pedimos, como debe ser." });
+
+    if (d === "playa") {
+      moments.push({ when: "A mediodía", time: "hacia las 12", art: "playa", title: "Playa (con pareooo)",
+        text: (m === "cama" ? "Del sofá a la arena: nada como un poco de mar para espabilarnos. " : "Del desayuno directos a la arena. ")
+          + "Sol, agua, tú con tu pareo y yo peleándome con la toalla para que no se la lleve el viento." });
+    } else {
+      moments.push({ when: "A mediodía", time: "hacia las 12", art: "casa", title: "Vagueo oficial en casa",
+        text: "Sofá, música y otro capítulo, sin culpa ninguna. "
+          + (c === "pasta" ? "Cuando nos entre el hambre nos metemos en la cocina: yo cocino, tú supervisas (y robas algo de la olla)."
+                           : "Cuando apriete el hambre nos vestimos y salimos a comer.") });
+    }
+
+    const comer = {
+      pasta: { title: "Pasta buena hecha por mí", text: d === "playa"
+        ? "Volvemos a casa con el pelo salado, te duchas tranquila y cuando sales ya huele a pasta. Mesa puesta y comer juntos sin mirar el reloj."
+        : "Comemos la pasta que hemos estado preparando. Mesa bonita, buena música y repetir plato está permitido." },
+      burger: { title: "Hamburgueseríaaa", text: d === "playa"
+        ? "De la playa a por una hamburguesa buena, de esas que se comen con las dos manos. Patatas para compartir (las últimas son tuyas)."
+        : "Por fin salimos de casa, rumbo a la hamburguesería. Hamburguesa buena, patatas para compartir y las últimas son tuyas." },
+      italiano: { title: "Comida en un italiano", text: d === "playa"
+        ? "De la playa a un italiano: pizza o pasta, lo que te pida el cuerpo, y un postre a medias aunque digas que no quieres."
+        : "Nos ponemos guapos y nos vamos a un italiano. Pizza o pasta, lo que te pida el cuerpo, y un postre a medias aunque digas que no quieres." },
+    }[c];
+    moments.push({ when: "Comer", time: "sobre las 14:00–14:30", art: c, ...comer });
+
+    moments.push({ when: "Por la tarde, tempranito", time: "hacia las 16:30", art: "siesta", title: "Siesta o presiesta",
+      text: (sale ? "Volvemos a casa, persianas a media altura y " : "Recogemos lo justo (o lo dejamos para luego) y ")
+        + "siesta. O presiesta, que es más de abrazarse que de dormir. Tú decides cuál toca." });
+
+    if (x.length) {
+      const bits = {
+        paseo: "un paseo juntos para despertarnos del todo",
+        fotos: "fotos bonitas por el camino (tú posas, yo intento estar a la altura)",
+        sorpresa: "una sorpresa que elijo yo, porque confías en mí",
+      };
+      const list = x.map(k => bits[k]);
+      const joined = list.length > 1 ? list.slice(0, -1).join(", ") + " y " + list.at(-1) : list[0];
+      moments.push({ when: "Para rematar", time: "cuando nos despertemos", art: x.includes("sorpresa") ? "sorpresa" : x[0],
+        title: x.map(k => LABEL[k]).join(" + "),
+        text: "Y para cerrar el día: " + joined + "." });
+    }
+    return { story: (m === "cama" ? "Empezamos sin salir de la cama. " : "Empezamos saliendo a desayunar. ") + stories[`${d}-${c}`], moments };
+  }
+
+  function summaryText(s, estado) {
+    const plan = buildPlan(s);
+    const lines = [
+      "Propuesta para miamor ❤️",
+      "Estado: " + (estado === "confirmada" ? "¡Cita confirmada! ✅" : "Quiere cambiar algo ✏️"),
+      "",
+      "Mañana: " + LABEL[s.manana],
+      "Resto de la mañana: " + LABEL[s.mediodia],
+      "Comida: " + LABEL[s.comida],
+      "Extras: " + (s.extras.length ? s.extras.map(k => LABEL[k]).join(", ") : "ninguno"),
+      "",
+      "Nuestro sábado ideal:",
+      ...plan.moments.map(mo => `• ${mo.when} (${mo.time}): ${mo.title}`),
+      "",
+      "Lo importante no es el plan, sino que sea contigo.",
+    ];
+    return lines.join("\n");
+  }
+
+  // ——— Envío real (db del artefacto), si está disponible ———
+  let dbP = null;
+  const getDb = () => (dbP ||= (window.claude?.use ? window.claude.use("db").catch(() => null) : Promise.resolve(null)));
+  async function send(estado) {
+    const db = await getDb();
+    if (!db) return false;
+    const plan = buildPlan(state);
+    try {
+      await db.collection("respuestas").add({
+        estado,
+        manana: LABEL[state.manana],
+        mediodia: LABEL[state.mediodia],
+        comida: LABEL[state.comida],
+        extras: state.extras.map(k => LABEL[k]),
+        itinerario: plan.moments.map(mo => `${mo.when} (${mo.time}): ${mo.title}. ${mo.text}`),
+        resumen: summaryText(state, estado),
+        enviadoEn: new Date().toISOString(),
+      });
+      return true;
+    } catch (e) { return false; }
+  }
+
+  // ——— Render ———
+  function setTop(show, stepIdx) {
+    top.hidden = !show;
+    hearts.innerHTML = STEPS.map((_, i) => `<span class="${i <= stepIdx ? "on" : ""}">${heart()}</span>`).join("");
+  }
+  function mount(html) {
+    app.innerHTML = `<section class="screen enter">${html}</section>`;
+    window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  }
+
+  function renderCover() {
+    setTop(false, -1);
+    mount(`
+      <svg class="cover-art" viewBox="0 0 320 120" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path class="soft" stroke="var(--pink)" d="M10 96c40-30 80 20 120-6s70-40 110-10 50 10 70 0" stroke-dasharray="3 6"/>
+          <g transform="translate(132 18) scale(2.4)"><path d="${HEART_PATH}" fill="currentColor" stroke="none"/></g>
+          <g transform="translate(240 64) scale(.9)" stroke="var(--pink)"><path d="${HEART_PATH}"/></g>
+          <g transform="translate(46 40) scale(.7)"><path d="${HEART_PATH}"/></g>
+        </g>
+      </svg>
+      <p class="eyebrow">Para Sara · este sábado</p>
+      <h1>Propuesta para <em>miamor</em> ❤️</h1>
+      <p class="lead">Este sábado tengo una misión: pasar un día increíble contigo. Pero antes necesito que me ayudes a tomar unas decisiones muy importantes…</p>
+      <div class="revenge"><p class="hand">Como sé que te encanta decidir a ti las cosas, esta cita la eliges tú entera JAJAJAJAJ. Esa es mi venganza.</p></div>
+      <div class="actions">
+        <button class="btn" id="start" type="button">Elegir nuestra cita ${heart()}</button>
+        <p class="note">La cita empieza el sábado por la mañana. Son 4 preguntas cortitas.</p>
+      </div>`);
+    app.querySelector("#start svg").style.cssText = "width:18px;height:18px";
+    app.querySelector("#start").onclick = () => go("step", 0);
+  }
+
+  function renderStep(i) {
+    const s = STEPS[i];
+    setTop(true, i);
+    const val = state[s.key];
+    const isSel = (id) => (s.multi ? val.includes(id) : val === id);
+    const last = i === STEPS.length - 1;
+    mount(`
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <p class="eyebrow">${s.eyebrow}</p>
+        <h2>${s.q}</h2>
+        <p class="hand">${s.hand}</p>
+      </div>
+      <div class="options" role="${s.multi ? "group" : "radiogroup"}">
+        ${s.options.map(o => `
+          <button type="button" class="opt ${s.multi ? "multi" : ""}" data-id="${o.id}" aria-pressed="${isSel(o.id)}">
+            <span class="art">${ART[o.id]}</span>
+            <span class="txt"><span class="t">${o.t}</span><span class="d">${o.d}</span></span>
+            <span class="tick">${CHECK}</span>
+          </button>`).join("")}
+      </div>
+      <div class="actions">
+        ${last
+          ? `<button class="btn" id="next" type="button">Descubrir nuestra cita</button>
+             <button class="link" id="skip" type="button">Saltar, sin extras</button>`
+          : `<button class="btn" id="next" type="button" ${val ? "" : "disabled"}>Siguiente</button>`}
+      </div>`);
+
+    app.querySelectorAll(".opt").forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        if (s.multi) {
+          state.extras = state.extras.includes(id) ? state.extras.filter(k => k !== id) : [...state.extras, id];
+          btn.setAttribute("aria-pressed", state.extras.includes(id));
+          persist();
+          return;
+        }
+        state[s.key] = id;
+        persist();
+        app.querySelectorAll(".opt").forEach(b => b.setAttribute("aria-pressed", b === btn));
+        app.querySelector("#next").disabled = false;
+        clearTimeout(renderStep.t);
+        renderStep.t = setTimeout(() => go("step", i + 1), 520);
+      };
+    });
+    app.querySelector("#next").onclick = () => (last ? go("calc") : go("step", i + 1));
+    const skip = app.querySelector("#skip");
+    if (skip) skip.onclick = () => { state.extras = []; persist(); go("calc"); };
+  }
+
+  function renderCalc() {
+    setTop(false, -1);
+    mount(`<div class="calc"><div class="beat">${heart()}</div><p class="hand">Calculando nuestro sábado ideal…</p></div>`);
+    setTimeout(() => go("result"), 1500);
+  }
+
+  function renderResult() {
+    setTop(true, STEPS.length - 1);
+    const plan = buildPlan(state);
+    mount(`
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <p class="eyebrow">El veredicto</p>
+        <h2>Nuestro sábado ideal ❤️</h2>
+      </div>
+      <p class="story">${plan.story}</p>
+      <ol class="timeline">
+        ${plan.moments.map((mo, k) => `
+          <li class="moment show" style="animation-delay:${120 + k * 140}ms">
+            <span class="dot">${ART[mo.art]}</span>
+            <div class="body">
+              <span class="when">${mo.when} <small>${mo.time}</small></span>
+              <h3>${mo.title}</h3>
+              <p>${mo.text}</p>
+            </div>
+          </li>`).join("")}
+      </ol>
+      <p class="note">Las horas son orientativas: el sábado manda el sofá, no el reloj.</p>
+      <p class="closing">Lo importante no es el plan, sino que sea contigo.</p>
+      <div class="actions">
+        <button class="btn" id="yes" type="button">Confirmo nuestra cita ❤️</button>
+        <button class="btn ghost" id="change" type="button">Quiero cambiar algo</button>
+      </div>`);
+    app.querySelector("#yes").onclick = async (e) => {
+      e.currentTarget.disabled = true;
+      state.estado = "confirmada";
+      const ok = await send("confirmada");
+      go("done", ok);
+    };
+    app.querySelector("#change").onclick = () => {
+      send("quiere cambiar algo");
+      toast("Vale, cambia lo que quieras");
+      go("step", 0);
+    };
+  }
+
+  function renderDone(sent) {
+    setTop(false, -1);
+    const text = summaryText(state, "confirmada");
+    const wa = "https://wa.me/?text=" + encodeURIComponent(text);
+    mount(`
+      <div style="display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center">
+        <div class="beat" style="width:56px;height:56px">${heart()}</div>
+        <h2>¡Cita <em>confirmada</em>!</h2>
+        <p class="hand">Nos vemos el sábado por la mañana, mi preciosa</p>
+      </div>
+      ${sent
+        ? `<div class="status ok">${CHECK.replace('width="14" height="14"', 'width="20" height="20" style="color:var(--red);flex:none"')}<span>Tus respuestas ya me han llegado. Si quieres, mándamelas también por WhatsApp.</span></div>`
+        : `<div class="status"><span>Último paso: mándame el resumen por WhatsApp para que me llegue tu decisión.</span></div>`}
+      <div class="actions">
+        <a class="btn" id="wa" href="${wa}" target="_blank" rel="noopener">Mandármelo por WhatsApp</a>
+        <div class="row2">
+          <button class="btn ghost small" id="copy" type="button">Copiar resumen</button>
+          <button class="btn ghost small" id="edit" type="button">Cambiar algo</button>
+        </div>
+      </div>
+      <label class="note" for="summary">Resumen de la cita (por si acaso):</label>
+      <textarea class="summary" id="summary" readonly>${text}</textarea>`);
+    app.querySelector("#copy").onclick = async () => {
+      const ta = app.querySelector("#summary");
+      try { await navigator.clipboard.writeText(ta.value); toast("Copiado ❤️"); }
+      catch (e) { ta.focus(); ta.select(); toast("Selecciona y copia el texto"); }
+    };
+    app.querySelector("#edit").onclick = () => { send("quiere cambiar algo"); go("step", 0); };
+    confetti();
+  }
+
+  function confetti() {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const box = document.createElement("div");
+    box.className = "confetti";
+    for (let i = 0; i < 26; i++) {
+      const s = document.createElement("span");
+      const size = 10 + Math.random() * 16;
+      s.style.cssText = `left:${Math.random() * 100}%;width:${size}px;height:${size}px;animation-duration:${2.2 + Math.random() * 2}s;animation-delay:${Math.random() * .6}s;opacity:${.5 + Math.random() * .5}`;
+      s.innerHTML = heart();
+      box.appendChild(s);
+    }
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), 5000);
+  }
+
+  function go(screen, arg) {
+    state.screen = screen;
+    if (screen === "step") {
+      // no saltarse pasos obligatorios sin responder
+      let i = arg;
+      while (i > 0 && !STEPS[i - 1].multi && !state[STEPS[i - 1].key]) i--;
+      state.step = i;
+      return renderStep(i);
+    }
+    if (screen === "cover") return renderCover();
+    if (screen === "calc") return renderCalc();
+    if (screen === "result") return renderResult();
+    if (screen === "done") return renderDone(arg);
+  }
+  document.getElementById("back").onclick = () => {
+    if (state.screen === "step") return state.step === 0 ? go("cover") : go("step", state.step - 1);
+    if (state.screen === "result") return go("step", STEPS.length - 1);
+    go("cover");
+  };
+
+  go("cover");
+
+  // ——— Bandeja del propietario: ve lo que ha elegido Sara ———
+  (async () => {
+    if (!window.claude?.use) return;
+    const user = await window.claude.use("user");
+    if (!(await user?.isOwner?.())) return;
+    const db = await getDb();
+    if (!db) return;
+    const inbox = document.getElementById("inbox");
+    const list = document.getElementById("inboxList");
+    inbox.hidden = false;
+    db.collection("respuestas").orderBy("enviadoEn", "desc").limit(20).onSnapshot(snap => {
+      if (snap.empty) { list.className = "note"; list.textContent = "Aún no ha llegado nada."; return; }
+      list.className = "";
+      list.style.cssText = "display:flex;flex-direction:column;gap:10px";
+      list.replaceChildren(...snap.docs.map(doc => {
+        const r = doc.data();
+        const el = document.createElement("div");
+        el.className = "entry";
+        const pill = document.createElement("span");
+        pill.className = "pill";
+        pill.textContent = r.estado === "confirmada" ? "Confirmada ❤️" : "Quiere cambiar algo";
+        const when = document.createElement("span");
+        when.className = "note";
+        when.textContent = new Date(r.enviadoEn).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" });
+        const pre = document.createElement("pre");
+        pre.textContent = r.resumen;
+        el.append(pill, when, pre);
+        return el;
+      }));
+    }, () => { list.textContent = "No se han podido cargar las respuestas."; });
+  })();
+})();
+</script>
