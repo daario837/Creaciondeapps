@@ -244,7 +244,7 @@ a.btn { text-decoration: none; }
   // ——— Contenido ———
   const STEPS = [
     {
-      key: "manana", eyebrow: "Paso 1 · La mañana",
+      key: "manana", eyebrow: "Paso 1 · Plan inicial",
       q: "Primero, ¿qué plan te llama más para empezar la mañana, <em>mibaby</em>?",
       hand: "Aquí empieza todo…",
       options: [
@@ -253,7 +253,7 @@ a.btn { text-decoration: none; }
       ],
     },
     {
-      key: "mediodia", eyebrow: "Paso 2 · El resto de la mañana",
+      key: "mediodia", eyebrow: "Paso 2 · Plan principal",
       q: "Vale, el plan de la mañana está en tus manos. <em>Ahora viene lo importante…</em>",
       hand: "¿Y qué hacemos el resto de la mañana, cariño?",
       options: [
@@ -262,7 +262,7 @@ a.btn { text-decoration: none; }
       ],
     },
     {
-      key: "comida", eyebrow: "Paso 3 · Qué comemos",
+      key: "comida", eyebrow: "Paso 3 · Comida",
       q: "Pregunta seria: ¿qué <em>comemos</em>?",
       hand: "Piénsalo bien, que esto es sagrado",
       options: [
@@ -272,7 +272,7 @@ a.btn { text-decoration: none; }
       ],
     },
     {
-      key: "extras", multi: true, eyebrow: "Paso 4 · Opcional",
+      key: "extras", multi: true, eyebrow: "Paso 4 · Post (opcional)",
       q: "¿Algún extra para la tarde, <em>tempranito</em>?",
       hand: "Puedes elegir varios, o ninguno",
       options: [
@@ -311,17 +311,17 @@ a.btn { text-decoration: none; }
     };
     const moments = [];
     moments.push(m === "cama"
-      ? { when: "Por la mañana", time: "hacia las 10", art: "cama", title: "Desayuno y serie en la cama",
+      ? { when: "Plan inicial", time: "por la mañana, hacia las 10", art: "cama", title: "Desayuno y serie en la cama",
           text: "Te despierto con el desayuno ya preparado (o lo hacemos juntos, como prefieras). Elegimos serie, manta por encima y ninguna prisa." }
-      : { when: "Por la mañana", time: "hacia las 10", art: "fuera", title: "Desayuno en un sitio chuli",
+      : { when: "Plan inicial", time: "por la mañana, hacia las 10", art: "fuera", title: "Desayuno en un sitio chuli",
           text: "Nos arreglamos lo justo y salimos a desayunar juntos. Café, algo rico y tú decidiendo qué pedimos, como debe ser." });
 
     if (d === "playa") {
-      moments.push({ when: "A mediodía", time: "hacia las 12", art: "playa", title: "Playa (con pareooo)",
+      moments.push({ when: "Plan principal", time: "hacia las 12", art: "playa", title: "Playa (con pareooo)",
         text: (m === "cama" ? "Del sofá a la arena: nada como un poco de mar para espabilarnos. " : "Del desayuno directos a la arena. ")
           + "Sol, agua, tú con tu pareo y yo peleándome con la toalla para que no se la lleve el viento." });
     } else {
-      moments.push({ when: "A mediodía", time: "hacia las 12", art: "casa", title: "Vagueo oficial en casa",
+      moments.push({ when: "Plan principal", time: "hacia las 12", art: "casa", title: "Vagueo oficial en casa",
         text: "Sofá, música y otro capítulo, sin culpa ninguna. "
           + (c === "pasta" ? "Cuando nos entre el hambre nos metemos en la cocina: yo cocino, tú supervisas (y robas algo de la olla)."
                            : "Cuando apriete el hambre nos vestimos y salimos a comer.") });
@@ -338,12 +338,9 @@ a.btn { text-decoration: none; }
         ? "De la playa a un italiano: pizza o pasta, lo que te pida el cuerpo, y un postre a medias aunque digas que no quieres."
         : "Nos ponemos guapos y nos vamos a un italiano. Pizza o pasta, lo que te pida el cuerpo, y un postre a medias aunque digas que no quieres." },
     }[c];
-    moments.push({ when: "Comer", time: "sobre las 14:00–14:30", art: c, ...comer });
+    moments.push({ when: "Comida", time: "sobre las 14:00–14:30", art: c, ...comer });
 
-    moments.push({ when: "Por la tarde, tempranito", time: "hacia las 16:30", art: "siesta", title: "Siesta o presiesta",
-      text: (sale ? "Volvemos a casa, persianas a media altura y " : "Recogemos lo justo (o lo dejamos para luego) y ")
-        + "siesta. O presiesta, que es más de abrazarse que de dormir. Tú decides cuál toca." });
-
+    let postExtra = "";
     if (x.length) {
       const bits = {
         paseo: "un paseo juntos para despertarnos del todo",
@@ -352,10 +349,12 @@ a.btn { text-decoration: none; }
       };
       const list = x.map(k => bits[k]);
       const joined = list.length > 1 ? list.slice(0, -1).join(", ") + " y " + list.at(-1) : list[0];
-      moments.push({ when: "Para rematar", time: "cuando nos despertemos", art: x.includes("sorpresa") ? "sorpresa" : x[0],
-        title: x.map(k => LABEL[k]).join(" + "),
-        text: "Y para cerrar el día: " + joined + "." });
+      postExtra = " Y cuando nos despertemos: " + joined + ".";
     }
+    moments.push({ when: "Post", time: "por la tarde, tempranito", art: "siesta",
+      title: "Siesta o presiesta" + (x.length ? " + " + x.map(k => LABEL[k].toLowerCase()).join(" + ") : ""),
+      text: (sale ? "Volvemos a casa, persianas a media altura y " : "Recogemos lo justo (o lo dejamos para luego) y ")
+        + "siesta. O presiesta, que es más de abrazarse que de dormir. Tú decides cuál toca." + postExtra });
     return { story: (m === "cama" ? "Empezamos sin salir de la cama. " : "Empezamos saliendo a desayunar. ") + stories[`${d}-${c}`], moments };
   }
 
@@ -365,10 +364,10 @@ a.btn { text-decoration: none; }
       "Propuesta para miamor ❤️",
       "Estado: " + (estado === "confirmada" ? "¡Cita confirmada! ✅" : "Quiere cambiar algo ✏️"),
       "",
-      "Mañana: " + LABEL[s.manana],
-      "Resto de la mañana: " + LABEL[s.mediodia],
+      "Plan inicial: " + LABEL[s.manana],
+      "Plan principal: " + LABEL[s.mediodia],
       "Comida: " + LABEL[s.comida],
-      "Extras: " + (s.extras.length ? s.extras.map(k => LABEL[k]).join(", ") : "ninguno"),
+      "Post: siesta o presiesta" + (s.extras.length ? " + " + s.extras.map(k => LABEL[k]).join(", ") : ""),
       "",
       "Nuestro sábado ideal:",
       ...plan.moments.map(mo => `• ${mo.when} (${mo.time}): ${mo.title}`),
